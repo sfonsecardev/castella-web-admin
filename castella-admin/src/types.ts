@@ -16,4 +16,33 @@ export interface MenuItem {
   title: string;
   path: string;
   roles: string[]; // array of role names allowed to see the item
+}
+
+export interface ClienteRef {
+  _id: string
+  nombre: string
+  // add more fields if necessary
+}
+
+export interface OrdenDeTrabajo {
+  _id: string
+  numero: number
+  estado: string
+  cliente: ClienteRef
+  tecnico?: Usuario
+  fechaDigitacion?: string
+  fechaProgramada?: string
+  fechaEjecucion?: string
+  factura?: string
+  periodicidadMeses?: number
+  // other fields omitted
+  [key: string]: unknown
+}
+
+export interface Nota {
+  _id: string
+  ordenDeTrabajo: string
+  usuario: Usuario
+  nota: string
+  fecha: string
 } 
