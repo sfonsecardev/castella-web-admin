@@ -7,4 +7,5 @@ export const menuConfig: MenuItem[] = [
   { title: 'Users', path: '/users', roles: ['ADMINISTRADOR', 'SUPERVISOR', 'Super Admin'] },
   { title: 'Clients', path: '/clients', roles: ['ADMINISTRADOR', 'SUPERVISOR', 'Super Admin'] },
   { title: 'System Admin', path: '/admin', roles: ['ADMINISTRADOR', 'SUPERVISOR', 'Super Admin'] },
+  { title: 'Performance Ratings', path: '/ratings', roles: ['ADMINISTRADOR', 'ADMIN-SUPER'] },
 ] 

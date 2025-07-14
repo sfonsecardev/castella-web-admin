@@ -13,7 +13,7 @@ import { DataGrid } from '@mui/x-data-grid'
 import type { GridColDef, GridPaginationModel } from '@mui/x-data-grid'
 import api from '../api/axios'
 import type { OrdenDeTrabajo, Usuario } from '../types'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 const pageSize = 10
 
@@ -24,7 +24,10 @@ export default function OrdersPage() {
   const [rowCount, setRowCount] = useState(0)
 
   // filters
-  const [estado, setEstado] = useState('')
+  const location = useLocation()
+  const params = new URLSearchParams(location.search)
+
+  const [estado, setEstado] = useState(params.get('estado') ?? '')
   const [tecnico, setTecnico] = useState('')
   const [numero, setNumero] = useState('')
   const [filtroTexto, setFiltroTexto] = useState('')
