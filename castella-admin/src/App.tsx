@@ -7,6 +7,8 @@ import OrdersPage from './pages/OrdersPage'
 import OrderDetailsPage from './pages/OrderDetailsPage'
 import GuaranteesPage from './pages/GuaranteesPage'
 import RatingsPage from './pages/RatingsPage'
+import UsersPage from './pages/UsersPage'
+import ClientsPage from './pages/ClientsPage'
 
 export default function App() {
   return (
@@ -23,6 +25,8 @@ export default function App() {
           <Route path="/order/:id" element={<OrderDetailsPage />} />
           <Route path="/guarantees" element={<GuaranteesPage />} />
           <Route path="/ratings" element={<RatingsPage />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="/clients" element={<ClientsPage />} />
           {/* Other protected routes can be added here */}
         </Route>
       </Route>
