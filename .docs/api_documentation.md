@@ -421,7 +421,7 @@ Set maintenance periodicity for an order.
   "orden": {
     "_id": "507f1f77bcf86cd799439010",
     "periodicidadMeses": 6,
-    "estado": "FINALIZADA"
+    "estado": "FINALIZADO"
   }
 }
 ```
