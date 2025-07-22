@@ -34,23 +34,53 @@ export default function OrderDetailsPage() {
     setLoading(true)
     try {
       const { data } = await api.get(`/orden/${id}`)
-      const ord: OrdenDeTrabajo = data.data ?? data
+      const ord: OrdenDeTrabajo = data.ordenDeTrabajo ?? data.data ?? data
       setOrder(ord)
-      setEstado(ord.estado)
+      setEstado(ord?.estado || '')
+    } catch (error) {
+      console.error('Error fetching order:', error)
+      setOrder(null)
     } finally {
       setLoading(false)
     }
   }
 
   const fetchTecnicos = async () => {
-    const { data } = await api.get('/usuarios-rol/TECNICO')
-    setTecnicos(data.data ?? data)
+    try {
+      const { data } = await api.get('/usuarios-rol/TECNICO')
+      // Handle the response structure: {usuarios: Array}
+      let list: Usuario[] = []
+      if (Array.isArray(data)) {
+        list = data
+      } else if (Array.isArray(data.usuarios)) {
+        list = data.usuarios
+      } else if (Array.isArray(data.data)) {
+        list = data.data
+      }
+      setTecnicos(list)
+    } catch (error) {
+      console.error('Error fetching technicians:', error)
+      setTecnicos([]) // Set empty array on error
+    }
   }
 
   const fetchNotes = async () => {
     if (!id) return
-    const { data } = await api.get(`/notas-orden/${id}`)
-    setNotes(data.data ?? data)
+    try {
+      const { data } = await api.get(`/notas-orden/${id}`)
+      let notesList: Nota[] = []
+      if (Array.isArray(data)) {
+        notesList = data
+      } else if (Array.isArray(data.notas)) {
+        notesList = data.notas
+      } else if (Array.isArray(data.data)) {
+        notesList = data.data
+      }
+      setNotes(notesList)
+    } catch (error) {
+      console.error('Error fetching notes:', error)
+      setNotes([])
+    }
   }
 
   useEffect(() => {
@@ -131,7 +161,7 @@ export default function OrderDetailsPage() {
             label="Asignar Técnico"
             onChange={(e) => handleAssignTecnico(e.target.value)}
           >
-            {tecnicos.map((t) => (
+            {(Array.isArray(tecnicos) ? tecnicos : []).map((t) => (
               <MenuItem key={t._id} value={t._id}>
                 {t.nombre}
               </MenuItem>
@@ -142,7 +172,7 @@ export default function OrderDetailsPage() {
 
       <Typography variant="h6">Notas</Typography>
       <Paper sx={{ p: 2, mb: 2 }}>
-        {notes.map((n) => (
+        {(Array.isArray(notes) ? notes : []).map((n) => (
           <Box key={n._id} sx={{ mb: 1 }}>
             <Typography variant="body2">
               {new Date(n.fecha).toLocaleString()} - {n.usuario?.nombre}
