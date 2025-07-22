@@ -11,7 +11,18 @@ import {
   Tabs,
   Tab,
   Chip,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  Grid,
 } from '@mui/material'
+import {
+  Visibility as VisibilityIcon,
+  Assignment as AssignmentIcon,
+} from '@mui/icons-material'
 import { DataGrid } from '@mui/x-data-grid'
 import type { GridColDef, GridPaginationModel } from '@mui/x-data-grid'
 import api from '../api/axios'
@@ -54,6 +65,15 @@ export default function MobileAppOrdersPage() {
   const [filtroTexto, setFiltroTexto] = useState('')
   const [tecnicos, setTecnicos] = useState<Usuario[]>([])
 
+  // assignment modal
+  const [assignModalOpen, setAssignModalOpen] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<OrdenDeTrabajo | null>(null)
+  const [assignedTecnico, setAssignedTecnico] = useState('')
+  const [fechaProgramada, setFechaProgramada] = useState('')
+  const [horaInicio, setHoraInicio] = useState('')
+  const [assignLoading, setAssignLoading] = useState(false)
+  const [assignError, setAssignError] = useState('')
+
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -61,14 +81,33 @@ export default function MobileAppOrdersPage() {
     api
       .get('/usuarios-rol/TECNICO')
       .then((res) => {
-        console.log('Technicians API response', res.data)
+        console.log('Technicians API Full Response:', res)
+        console.log('Technicians API Response Data:', res.data)
+        console.log('Response Data Type:', typeof res.data)
+        console.log('Is Response Data Array?', Array.isArray(res.data))
+        
         const payload = res.data
         let list: Usuario[] = []
-        if (Array.isArray(payload)) list = payload
-        else if (Array.isArray(payload.data)) list = payload.data
+        if (Array.isArray(payload)) {
+          list = payload
+          console.log('Using payload directly as array:', list)
+        } else if (Array.isArray(payload.usuarios)) {
+          list = payload.usuarios
+          console.log('Using payload.usuarios as array:', list)
+        } else if (Array.isArray(payload.data)) {
+          list = payload.data
+          console.log('Using payload.data as array:', list)
+        } else {
+          console.log('No array found in response. Payload structure:', payload)
+        }
+        
+        console.log('Final technicians list:', list)
+        console.log('Number of technicians:', list.length)
         setTecnicos(list)
       })
-      .catch(() => {})
+      .catch((error) => {
+        console.error('Error fetching technicians:', error)
+      })
   }, [])
 
   const fetchOrders = async () => {
@@ -144,6 +183,58 @@ export default function MobileAppOrdersPage() {
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue)
     setPage(0) // Reset to first page when changing tabs
+  }
+
+  const handleViewDetails = (order: OrdenDeTrabajo) => {
+    navigate(`/order/${order._id}`)
+  }
+
+  const handleAssignTechnician = (order: OrdenDeTrabajo) => {
+    setSelectedOrder(order)
+    setAssignedTecnico(order.tecnico?._id || '')
+    
+    // Set current values or defaults
+    const currentDate = order.fechaProgramada ? 
+      new Date(order.fechaProgramada).toISOString().split('T')[0] : 
+      new Date().toISOString().split('T')[0]
+    setFechaProgramada(currentDate)
+    
+    setHoraInicio(order.horaInicio || '09:00')
+    setAssignError('')
+    setAssignModalOpen(true)
+  }
+
+  const handleAssignSubmit = async () => {
+    if (!selectedOrder || !assignedTecnico || !fechaProgramada || !horaInicio) {
+      setAssignError('Todos los campos son obligatorios')
+      return
+    }
+
+    setAssignLoading(true)
+    setAssignError('')
+
+    try {
+      const updateData = {
+        tecnico: assignedTecnico,
+        fechaProgramada: `${fechaProgramada}T${horaInicio}:00.000Z`,
+        horaInicio: horaInicio,
+        estado: 'ASIGNADA' // Update status to assigned
+      }
+
+      await api.put(`/orden/${selectedOrder._id}`, updateData)
+      
+      // Refresh the orders list
+      await fetchOrders()
+      
+      // Close modal
+      setAssignModalOpen(false)
+      setSelectedOrder(null)
+    } catch (error) {
+      console.error('Error assigning technician:', error)
+      setAssignError('Error al asignar el técnico. Intente nuevamente.')
+    } finally {
+      setAssignLoading(false)
+    }
   }
 
   const getStatusChip = (estado: string) => {
@@ -233,6 +324,37 @@ export default function MobileAppOrdersPage() {
         return row?.servicio?.nombre || 'N/A'
       },
     },
+    {
+      field: 'actions',
+      headerName: 'Acciones',
+      width: 120,
+      sortable: false,
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleViewDetails(params.row)
+            }}
+            title="Ver detalles"
+          >
+            <VisibilityIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleAssignTechnician(params.row)
+            }}
+            title="Asignar técnico"
+            color="primary"
+          >
+            <AssignmentIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      ),
+    },
   ]
 
   const handleClearFilters = () => {
@@ -273,7 +395,7 @@ export default function MobileAppOrdersPage() {
           />
           <FormControl size="small" sx={{ minWidth: 160 }}>
             <InputLabel>Técnico</InputLabel>
-            <Select value={tecnico} label="Técnico" onChange={(e) => setTecnico(e.target.value)}>
+            <Select value={tecnico} label="Técnico" onChange={(e) => setTecnico(e.target.value as string)}>
               <MenuItem value="">Todos</MenuItem>
               {(Array.isArray(tecnicos) ? tecnicos : []).map((t) => (
                 <MenuItem key={t._id} value={t._id}>
@@ -311,7 +433,7 @@ export default function MobileAppOrdersPage() {
           />
           <FormControl size="small" sx={{ minWidth: 160 }}>
             <InputLabel>Técnico</InputLabel>
-            <Select value={tecnico} label="Técnico" onChange={(e) => setTecnico(e.target.value)}>
+            <Select value={tecnico} label="Técnico" onChange={(e) => setTecnico(e.target.value as string)}>
               <MenuItem value="">Todos</MenuItem>
               {(Array.isArray(tecnicos) ? tecnicos : []).map((t) => (
                 <MenuItem key={t._id} value={t._id}>
@@ -365,6 +487,74 @@ export default function MobileAppOrdersPage() {
           </Typography>
         </Box>
       )}
+
+      {/* Assignment Modal */}
+      <Dialog open={assignModalOpen} onClose={() => setAssignModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Asignar Técnico y Programar
+        </DialogTitle>
+        {selectedOrder && (
+          <Box sx={{ px: 3, pb: 1 }}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Orden #{selectedOrder.aniomesprogramacion || ''}{selectedOrder.numero || ''} - {selectedOrder.cliente?.nombre || ''}
+            </Typography>
+          </Box>
+        )}
+        <DialogContent>
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {assignError && (
+              <Alert severity="error">{assignError}</Alert>
+            )}
+            <FormControl fullWidth>
+              <InputLabel>Técnico</InputLabel>
+              <Select
+                value={assignedTecnico}
+                label="Técnico"
+                onChange={(e) => setAssignedTecnico(e.target.value as string)}
+              >
+                <MenuItem value="">Seleccionar técnico</MenuItem>
+                {tecnicos.map((t) => (
+                  <MenuItem key={t._id} value={t._id}>
+                    {t.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                label="Fecha Programada"
+                type="date"
+                value={fechaProgramada}
+                onChange={(e) => setFechaProgramada(e.target.value)}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                sx={{ flex: 2 }}
+              />
+              <TextField
+                label="Hora"
+                type="time"
+                value={horaInicio}
+                onChange={(e) => setHoraInicio(e.target.value)}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                sx={{ flex: 1 }}
+              />
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAssignModalOpen(false)}>Cancelar</Button>
+          <Button 
+            onClick={handleAssignSubmit} 
+            variant="contained"
+            disabled={assignLoading}
+          >
+            {assignLoading ? 'Asignando...' : 'Asignar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 } 
