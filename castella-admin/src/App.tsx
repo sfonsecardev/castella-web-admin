@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
 import MainLayout from './layouts/MainLayout'
 import OrdersPage from './pages/OrdersPage'
+import MobileAppOrdersPage from './pages/MobileAppOrdersPage'
 import OrderDetailsPage from './pages/OrderDetailsPage'
 import GuaranteesPage from './pages/GuaranteesPage'
 import RatingsPage from './pages/RatingsPage'
@@ -22,6 +23,7 @@ export default function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/mobile-orders" element={<MobileAppOrdersPage />} />
           <Route path="/order/:id" element={<OrderDetailsPage />} />
           <Route path="/guarantees" element={<GuaranteesPage />} />
           <Route path="/ratings" element={<RatingsPage />} />

@@ -35,6 +35,7 @@ export interface OrdenDeTrabajo {
   fechaEjecucion?: string
   factura?: string
   periodicidadMeses?: number
+  tipo?: string // Added to identify mobile app orders vs normal orders
   // other fields omitted
   [key: string]: unknown
 }
