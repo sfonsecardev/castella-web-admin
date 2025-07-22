@@ -461,7 +461,16 @@ export default function MobileAppOrdersPage() {
         </Box>
       </TabPanel>
 
-      <div style={{ height: 600, width: '100%' }}>
+      <Box sx={{ 
+        height: 600, 
+        width: '100%', 
+        backgroundColor: 'background.paper',
+        borderRadius: 1,
+        overflow: 'hidden',
+        '& .MuiDataGrid-root': {
+          backgroundColor: 'background.paper',
+        }
+      }}>
         <DataGrid
           rows={orders}
           columns={columns}
@@ -476,9 +485,17 @@ export default function MobileAppOrdersPage() {
             '& .MuiDataGrid-row:hover': {
               cursor: 'pointer',
             },
+            border: 'none',
+            '& .MuiDataGrid-cell': {
+              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+            },
+            '& .MuiDataGrid-columnHeaders': {
+              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              borderBottom: '1px solid rgba(224, 224, 224, 1)',
+            },
           }}
         />
-      </div>
+      </Box>
       
       {/* Summary info */}
       {!loading && (

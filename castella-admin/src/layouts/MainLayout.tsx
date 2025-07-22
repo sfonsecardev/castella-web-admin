@@ -49,7 +49,16 @@ export default function MainLayout() {
           </List>
         </Box>
       </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box 
+        component="main" 
+        sx={{ 
+          flexGrow: 1, 
+          p: 3, 
+          backgroundColor: 'background.default',
+          minHeight: '100vh',
+          overflowX: 'auto'
+        }}
+      >
         <Toolbar />
         <Outlet />
       </Box>
