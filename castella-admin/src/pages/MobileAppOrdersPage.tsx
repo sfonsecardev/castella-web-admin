@@ -281,7 +281,8 @@ export default function MobileAppOrdersPage() {
     {
       field: 'cliente',
       headerName: 'Cliente',
-      flex: 1,
+      flex: 1.5,
+      minWidth: 200,
       valueGetter: (value, row) => {
         return row?.cliente?.nombre || 'N/A'
       },
@@ -289,7 +290,8 @@ export default function MobileAppOrdersPage() {
     {
       field: 'tecnico',
       headerName: 'Técnico',
-      flex: 1,
+      flex: 1.5,
+      minWidth: 180,
       valueGetter: (value, row) => {
         return row?.tecnico?.nombre || 'No asignado'
       },
