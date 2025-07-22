@@ -117,6 +117,7 @@ Collection: `tareas`
 | `nombre_busqueda` | String | false | — | — | Searchable name |
 | `registro` | String | false | — | — | Registry info |
 | `notas` | String | false | — | — | Notes |
+| `mobileApp` | Boolean | false | `false` | — | Whether the client has an active mobile app user |
 
 Collection: `clientes`
 

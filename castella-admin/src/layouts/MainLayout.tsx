@@ -1,4 +1,5 @@
-import { Box, CssBaseline, Drawer, List, ListItemButton, ListItemText, Toolbar, AppBar, Typography } from '@mui/material'
+import { Box, CssBaseline, Drawer, List, ListItemButton, ListItemText, Toolbar, AppBar, Typography, IconButton } from '@mui/material'
+import LogoutIcon from '@mui/icons-material/Logout'
 import { useNavigate, useLocation, Outlet } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import { menuConfig } from '../menuConfig'
@@ -16,10 +17,13 @@ export default function MainLayout() {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Typography variant="h6" noWrap component="div">
             Castella Admin
           </Typography>
+          <IconButton color="inherit" onClick={() => { useAuthStore.getState().logout(); navigate('/login') }}>
+            <LogoutIcon />
+          </IconButton>
         </Toolbar>
       </AppBar>
       <Drawer

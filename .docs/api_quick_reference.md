@@ -9,6 +9,7 @@
 | POST | `/login-client` | None | Customer login |
 | POST | `/cliente/forgot-password` | None | Request password reset |
 | POST | `/cliente/reset-password` | None | Reset password with token |
+| PUT | `/cliente/cambiar-contrasenia` | Client | Change password (when logged in) |
 
 ### Guarantee System
 | Method | Endpoint | Auth | Description |
@@ -68,7 +69,7 @@
   celular: String,
   correo: String (unique),
   contrasenia: String (hashed),
-  direccion: String,
+  mobileApp: Boolean (default: false),
   resetPassword: {token, expires}
 }
 ```
