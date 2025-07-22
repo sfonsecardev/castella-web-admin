@@ -343,17 +343,19 @@ export default function MobileAppOrdersPage() {
           >
             <VisibilityIcon fontSize="small" />
           </IconButton>
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation()
-              handleAssignTechnician(params.row)
-            }}
-            title="Asignar técnico"
-            color="primary"
-          >
-            <AssignmentIcon fontSize="small" />
-          </IconButton>
+          {currentTab === 0 && (
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleAssignTechnician(params.row)
+              }}
+              title="Asignar técnico"
+              color="primary"
+            >
+              <AssignmentIcon fontSize="small" />
+            </IconButton>
+          )}
         </Box>
       ),
     },
