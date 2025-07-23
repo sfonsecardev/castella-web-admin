@@ -19,7 +19,7 @@ export default function MainLayout() {
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Typography variant="h6" noWrap component="div">
-            Castella Admin
+            Castella Sagarra Mobile Backoffice
           </Typography>
           <IconButton color="inherit" onClick={() => { useAuthStore.getState().logout(); navigate('/login') }}>
             <LogoutIcon />
