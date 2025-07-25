@@ -33,6 +33,10 @@ export default function OrderDetailsPage() {
   const [successMessage, setSuccessMessage] = useState('')
   const [showSuccess, setShowSuccess] = useState(false)
 
+  // Add scheduled date and time state
+  const [fechaProgramada, setFechaProgramada] = useState('')
+  const [horaProgramada, setHoraProgramada] = useState('')
+
   const authUser = useAuthStore((s) => s.user)
 
   const fetchOrder = async () => {
@@ -43,6 +47,13 @@ export default function OrderDetailsPage() {
       const ord: OrdenDeTrabajo = data.ordenDeTrabajo ?? data.data ?? data
       setOrder(ord)
       setEstado(ord?.estado || '')
+      
+      // Set scheduled date and time if available
+      if (ord?.fechaProgramada) {
+        const date = new Date(ord.fechaProgramada)
+        setFechaProgramada(date.toISOString().split('T')[0]) // YYYY-MM-DD format
+        setHoraProgramada(date.toTimeString().split(' ')[0].substring(0, 5)) // HH:MM format
+      }
     } catch (error) {
       console.error('Error fetching order:', error)
       setOrder(null)
@@ -105,6 +116,28 @@ export default function OrderDetailsPage() {
     }
   }
 
+  const handleUpdateSchedule = async () => {
+    if (!id) return
+    if (!fechaProgramada || !horaProgramada) {
+      setFinalizationError('Fecha y hora son requeridas para programar la orden')
+      return
+    }
+
+    try {
+      // Combine date and time into ISO string
+      const scheduledDateTime = new Date(`${fechaProgramada}T${horaProgramada}:00`)
+      
+      await api.put(`/orden/${id}`, { 
+        fechaProgramada: scheduledDateTime.toISOString() 
+      })
+      await fetchOrder()
+      setSuccessMessage('Fecha y hora programada actualizada correctamente')
+      setShowSuccess(true)
+    } catch (error) {
+      console.error('Error updating schedule:', error)
+      setFinalizationError('Error al actualizar la programación. Por favor, inténtelo de nuevo.')
+    }
+  }
 
 
   const handleFinalize = async () => {
@@ -187,19 +220,6 @@ export default function OrderDetailsPage() {
       <Typography variant="h6">Detalles de la Orden</Typography>
       <Paper sx={{ p: 2, mb: 2 }}>
         <div>Estado: {order.estado}</div>
-        <FormControl size="small" sx={{ mt: 1, minWidth: 160 }}>
-          <InputLabel>Actualizar Estado</InputLabel>
-          <Select value={estado} label="Actualizar Estado" onChange={(e) => {
-            const val = e.target.value
-            setEstado(val)
-            handleChangeEstado(val)
-          }}>
-            <MenuItem value="PENDIENTE">Pendiente</MenuItem>
-            <MenuItem value="ASIGNADA">Asignada</MenuItem>
-            <MenuItem value="EN EJECUCIÓN">En ejecución</MenuItem>
-            <MenuItem value="FINALIZADO">Finalizado</MenuItem>
-          </Select>
-        </FormControl>
 
         <FormControl size="small" sx={{ mt: 1, minWidth: 160 }}>
           <InputLabel>Asignar Técnico</InputLabel>
@@ -215,6 +235,46 @@ export default function OrderDetailsPage() {
             ))}
           </Select>
         </FormControl>
+      </Paper>
+
+      <Typography variant="h6">Programación de la Orden</Typography>
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+          <TextField
+            label="Fecha Programada"
+            type="date"
+            value={fechaProgramada}
+            onChange={(e) => {
+              setFechaProgramada(e.target.value)
+              if (finalizationError) setFinalizationError('')
+            }}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            sx={{ flex: 2 }}
+          />
+          <TextField
+            label="Hora"
+            type="time"
+            value={horaProgramada}
+            onChange={(e) => {
+              setHoraProgramada(e.target.value)
+              if (finalizationError) setFinalizationError('')
+            }}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            sx={{ flex: 1 }}
+          />
+        </Box>
+        <Button
+          variant="contained"
+          onClick={handleUpdateSchedule}
+          disabled={!fechaProgramada || !horaProgramada}
+          sx={{ mt: 1 }}
+        >
+          Actualizar Programación
+        </Button>
       </Paper>
 
       <Typography variant="h6">Finalizar Orden</Typography>
