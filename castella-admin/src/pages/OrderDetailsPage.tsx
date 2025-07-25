@@ -13,7 +13,7 @@ import {
   Alert,
   Snackbar,
 } from '@mui/material'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import api from '../api/axios'
 import type { OrdenDeTrabajo, Usuario } from '../types'
 import { useAuthStore } from '../store/auth'
@@ -372,7 +372,17 @@ export default function OrderDetailsPage() {
             ) : referencedOrder ? (
               <Box>
                 <Typography variant="body1">
-                  <strong>Orden Original:</strong> #{(referencedOrder.aniomesprogramacion as string) || ''}{referencedOrder.numero}
+                  <strong>Orden Original:</strong>{' '}
+                  <Link 
+                    to={`/order/${referencedOrder._id}`}
+                    style={{ 
+                      textDecoration: 'none', 
+                      color: '#1976d2',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    #{(referencedOrder.aniomesprogramacion as string) || ''}{referencedOrder.numero}
+                  </Link>
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Cliente: {referencedOrder.cliente?.nombre}
