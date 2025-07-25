@@ -37,6 +37,10 @@ export default function OrderDetailsPage() {
   const [fechaProgramada, setFechaProgramada] = useState('')
   const [horaProgramada, setHoraProgramada] = useState('')
 
+  // Add state for referenced order (guarantee of)
+  const [referencedOrder, setReferencedOrder] = useState<OrdenDeTrabajo | null>(null)
+  const [referencedOrderLoading, setReferencedOrderLoading] = useState(false)
+
   const authUser = useAuthStore((s) => s.user)
 
   // Helper function to send notifications
@@ -80,6 +84,21 @@ export default function OrderDetailsPage() {
     }
   }
 
+  // Function to fetch the referenced order (when this order is a guarantee of another order)
+  const fetchReferencedOrder = async (garantiaDeId: string) => {
+    setReferencedOrderLoading(true)
+    try {
+      const { data } = await api.get(`/orden/${garantiaDeId}`)
+      const refOrder: OrdenDeTrabajo = data.ordenDeTrabajo ?? data.data ?? data
+      setReferencedOrder(refOrder)
+    } catch (error) {
+      console.error('Error fetching referenced order:', error)
+      setReferencedOrder(null)
+    } finally {
+      setReferencedOrderLoading(false)
+    }
+  }
+
   const fetchOrder = async () => {
     if (!id) return
     setLoading(true)
@@ -98,6 +117,13 @@ export default function OrderDetailsPage() {
         const year = date.getFullYear()
         setFechaProgramada(`${day}/${month}/${year}`)
         setHoraProgramada(date.toTimeString().split(' ')[0].substring(0, 5)) // HH:MM format
+      }
+
+      // Fetch referenced order if this order is a guarantee of another order
+      if ((ord as any)?.garantiaDe) {
+        fetchReferencedOrder((ord as any).garantiaDe)
+      } else {
+        setReferencedOrder(null)
       }
     } catch (error) {
       console.error('Error fetching order:', error)
@@ -333,6 +359,41 @@ export default function OrderDetailsPage() {
         Orden #{(order.aniomesprogramacion as string) || ''}{order.numero}
       </Typography>
       <Divider sx={{ mb: 2 }} />
+      
+      {/* Referenced Order Section - only show if this order is a guarantee of another order */}
+      {(order as any)?.garantiaDe && (
+        <>
+          <Typography variant="h6" gutterBottom>
+            Garantía de la Orden
+          </Typography>
+          <Paper sx={{ p: 2, mb: 2 }}>
+            {referencedOrderLoading ? (
+              <Typography>Cargando información de la orden referenciada...</Typography>
+            ) : referencedOrder ? (
+              <Box>
+                <Typography variant="body1">
+                  <strong>Orden Original:</strong> #{(referencedOrder.aniomesprogramacion as string) || ''}{referencedOrder.numero}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Cliente: {referencedOrder.cliente?.nombre}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Estado: {referencedOrder.estado}
+                </Typography>
+                {referencedOrder.tecnico && (
+                  <Typography variant="body2" color="text.secondary">
+                    Técnico: {referencedOrder.tecnico.nombre}
+                  </Typography>
+                )}
+              </Box>
+            ) : (
+              <Typography color="error">
+                No se pudo cargar la información de la orden referenciada
+              </Typography>
+            )}
+          </Paper>
+        </>
+      )}
       
       {/* Error Alert for general errors */}
       {finalizationError && !finalizationError.includes('factura') && (
