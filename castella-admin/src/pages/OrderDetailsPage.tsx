@@ -39,6 +39,47 @@ export default function OrderDetailsPage() {
 
   const authUser = useAuthStore((s) => s.user)
 
+  // Helper function to send notifications
+  const sendNotificationToClient = async (title: string, body: string) => {
+    if (order?.cliente?._id) {
+      try {
+        const notificationData = {
+          title,
+          body,
+          usuarioId: order.cliente._id
+        }
+
+        console.log('Sending notification to client:', notificationData)
+        await api.post('/enviar-notificacion/', notificationData)
+        console.log('Notification sent successfully to client')
+      } catch (notificationError) {
+        console.error('Error sending notification to client:', notificationError)
+        // Don't fail the whole operation if notification fails
+      }
+    }
+  }
+
+  // Helper function to send notifications to technician
+  const sendNotificationToTechnician = async (title: string, body: string, tecnicoId?: string) => {
+    const targetTecnicoId = tecnicoId || order?.tecnico?._id
+    if (targetTecnicoId) {
+      try {
+        const notificationData = {
+          title,
+          body,
+          usuarioId: targetTecnicoId
+        }
+
+        console.log('Sending notification to technician:', notificationData)
+        await api.post('/enviar-notificacion/', notificationData)
+        console.log('Notification sent successfully to technician')
+      } catch (notificationError) {
+        console.error('Error sending notification to technician:', notificationError)
+        // Don't fail the whole operation if notification fails
+      }
+    }
+  }
+
   const fetchOrder = async () => {
     if (!id) return
     setLoading(true)
@@ -99,8 +140,26 @@ export default function OrderDetailsPage() {
       await api.put(`/orden/${id}`, { tecnico: tecnicoId })
       await fetchOrder()
       const tecnico = tecnicos.find(t => t._id === tecnicoId)
-      setSuccessMessage(`Técnico ${tecnico?.nombre || 'asignado'} asignado correctamente`)
+      const tecnicoName = tecnico?.nombre || 'Técnico'
+      
+      setSuccessMessage(`Técnico ${tecnicoName} asignado correctamente`)
       setShowSuccess(true)
+
+      // Send notification to client about technician assignment
+      const orderNumber = `${(order?.aniomesprogramacion as string) || ''}${order?.numero || ''}`
+      await sendNotificationToClient(
+        'Técnico Asignado',
+        `Su orden ${orderNumber} ha sido asignada al técnico ${tecnicoName}. Pronto se pondrá en contacto con usted.`
+      )
+
+      // Send notification to technician about new assignment
+      const clientName = order?.cliente?.nombre || 'Cliente'
+      const serviceName = (order as any)?.servicio?.nombre || 'servicio'
+      await sendNotificationToTechnician(
+        'Nueva Orden Asignada',
+        `Se le ha asignado la orden ${orderNumber} para el cliente ${clientName}. Servicio: ${serviceName}`,
+        tecnicoId
+      )
     } catch (error) {
       console.error('Error assigning technician:', error)
       setFinalizationError('Error al asignar técnico. Por favor, inténtelo de nuevo.')
@@ -114,6 +173,35 @@ export default function OrderDetailsPage() {
       await fetchOrder()
       setSuccessMessage(`Estado cambiado a "${newEstado}" correctamente`)
       setShowSuccess(true)
+
+      // Send notification to client about status change
+      const orderNumber = `${(order?.aniomesprogramacion as string) || ''}${order?.numero || ''}`
+      let statusMessage = ''
+      
+      switch (newEstado) {
+        case 'EN PROCESO':
+        case 'EN EJECUCIÓN':
+          statusMessage = `Su orden ${orderNumber} está ahora en proceso. El técnico ha comenzado a trabajar en su solicitud.`
+          break
+        case 'ASIGNADA':
+          statusMessage = `Su orden ${orderNumber} ha sido asignada y será procesada pronto.`
+          break
+        case 'PENDIENTE':
+          statusMessage = `Su orden ${orderNumber} está pendiente de procesamiento.`
+          break
+        default:
+          statusMessage = `Su orden ${orderNumber} ha cambiado de estado a: ${newEstado}`
+      }
+      
+      await sendNotificationToClient('Estado de Orden Actualizado', statusMessage)
+
+      // Send notification to technician if there's one assigned
+      if (order?.tecnico?._id) {
+        await sendNotificationToTechnician(
+          'Estado de Orden Actualizado',
+          `La orden ${orderNumber} ha cambiado a estado: ${newEstado}`
+        )
+      }
     } catch (error) {
       console.error('Error changing status:', error)
       setFinalizationError('Error al cambiar el estado. Por favor, inténtelo de nuevo.')
@@ -138,12 +226,29 @@ export default function OrderDetailsPage() {
       await fetchOrder()
       setSuccessMessage('Fecha y hora programada actualizada correctamente')
       setShowSuccess(true)
+
+      // Send notification to client about schedule update
+      const orderNumber = `${(order?.aniomesprogramacion as string) || ''}${order?.numero || ''}`
+      const tecnicoName = order?.tecnico?.nombre || 'nuestro técnico'
+      
+      await sendNotificationToClient(
+        'Visita Programada',
+        `Su orden ${orderNumber} ha sido programada para el ${fechaProgramada} a las ${horaProgramada}. ${tecnicoName} lo visitará en la fecha indicada.`
+      )
+
+      // Send notification to technician about schedule update
+      if (order?.tecnico?._id) {
+        const clientName = order?.cliente?.nombre || 'Cliente'
+        await sendNotificationToTechnician(
+          'Cita Programada',
+          `Su visita al cliente ${clientName} (orden ${orderNumber}) ha sido programada para el ${fechaProgramada} a las ${horaProgramada}.`
+        )
+      }
     } catch (error) {
       console.error('Error updating schedule:', error)
       setFinalizationError('Error al actualizar la programación. Por favor, inténtelo de nuevo.')
     }
   }
-
 
   const handleFinalize = async () => {
     if (!id) return
@@ -171,6 +276,25 @@ export default function OrderDetailsPage() {
       await fetchOrder()
       setSuccessMessage('Orden finalizada correctamente')
       setShowSuccess(true)
+
+      // Send notification to client about order completion
+      const orderNumber = `${(order?.aniomesprogramacion as string) || ''}${order?.numero || ''}`
+      const serviceName = (order as any)?.servicio?.nombre || 'el servicio'
+      
+      await sendNotificationToClient(
+        'Orden Completada',
+        `Su orden ${orderNumber} ha sido finalizada exitosamente. Gracias por confiar en nosotros para ${serviceName}. Factura: ${factura.trim()}`
+      )
+
+      // Send notification to technician about order completion
+      if (order?.tecnico?._id) {
+        const clientName = order?.cliente?.nombre || 'Cliente'
+        await sendNotificationToTechnician(
+          'Orden Finalizada',
+          `La orden ${orderNumber} del cliente ${clientName} ha sido marcada como finalizada. Factura: ${factura.trim()}`
+        )
+      }
+
       // Clear the form fields after successful finalization
       setFactura('')
       setPeriodicidad('')
