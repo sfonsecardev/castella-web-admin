@@ -13,7 +13,7 @@ import {
 } from '@mui/material'
 import { useParams } from 'react-router-dom'
 import api from '../api/axios'
-import type { OrdenDeTrabajo, Usuario, Nota } from '../types'
+import type { OrdenDeTrabajo, Usuario } from '../types'
 import { useAuthStore } from '../store/auth'
 
 export default function OrderDetailsPage() {
@@ -22,8 +22,7 @@ export default function OrderDetailsPage() {
   const [loading, setLoading] = useState(false)
   const [tecnicos, setTecnicos] = useState<Usuario[]>([])
   const [estado, setEstado] = useState('')
-  const [nota, setNota] = useState('')
-  const [notes, setNotes] = useState<Nota[]>([])
+
   const [factura, setFactura] = useState('')
   const [periodicidad, setPeriodicidad] = useState('')
 
@@ -64,29 +63,11 @@ export default function OrderDetailsPage() {
     }
   }
 
-  const fetchNotes = async () => {
-    if (!id) return
-    try {
-      const { data } = await api.get(`/notas-orden/${id}`)
-      let notesList: Nota[] = []
-      if (Array.isArray(data)) {
-        notesList = data
-      } else if (Array.isArray(data.notas)) {
-        notesList = data.notas
-      } else if (Array.isArray(data.data)) {
-        notesList = data.data
-      }
-      setNotes(notesList)
-    } catch (error) {
-      console.error('Error fetching notes:', error)
-      setNotes([])
-    }
-  }
+
 
   useEffect(() => {
     fetchOrder()
     fetchTecnicos()
-    fetchNotes()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
@@ -102,16 +83,7 @@ export default function OrderDetailsPage() {
     fetchOrder()
   }
 
-  const handleAddNote = async () => {
-    if (!id || !nota) return
-    await api.post('/nota', {
-      ordenDeTrabajo: id,
-      usuario: authUser?._id,
-      nota,
-    })
-    setNota('')
-    fetchNotes()
-  }
+
 
   const handleFinalize = async () => {
     if (!id) return
@@ -129,7 +101,7 @@ export default function OrderDetailsPage() {
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        Orden #{order.numero}
+        Orden #{(order.aniomesprogramacion as string) || ''}{order.numero}
       </Typography>
       <Divider sx={{ mb: 2 }} />
       <Typography variant="h6">Información del Cliente</Typography>
@@ -170,29 +142,7 @@ export default function OrderDetailsPage() {
         </FormControl>
       </Paper>
 
-      <Typography variant="h6">Notas</Typography>
-      <Paper sx={{ p: 2, mb: 2 }}>
-        {(Array.isArray(notes) ? notes : []).map((n) => (
-          <Box key={n._id} sx={{ mb: 1 }}>
-            <Typography variant="body2">
-              {new Date(n.fecha).toLocaleString()} - {n.usuario?.nombre}
-            </Typography>
-            <Typography variant="body1">{n.nota}</Typography>
-          </Box>
-        ))}
-        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-          <TextField
-            label="Agregar nota"
-            fullWidth
-            size="small"
-            value={nota}
-            onChange={(e) => setNota(e.target.value)}
-          />
-          <Button variant="contained" onClick={handleAddNote}>
-            Añadir
-          </Button>
-        </Box>
-      </Paper>
+
 
       <Typography variant="h6">Finalizar Orden</Typography>
       <Paper sx={{ p: 2 }}>
