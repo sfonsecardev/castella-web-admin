@@ -199,7 +199,7 @@ export default function MobileAppOrdersPage() {
       new Date().toISOString().split('T')[0]
     setFechaProgramada(currentDate)
     
-    setHoraInicio(order.horaInicio || '09:00')
+    setHoraInicio((order.horaInicio as string) || '09:00')
     setAssignError('')
     setAssignModalOpen(true)
   }
@@ -222,6 +222,30 @@ export default function MobileAppOrdersPage() {
       }
 
       await api.put(`/orden/${selectedOrder._id}`, updateData)
+      
+      // Send notification to client about technician assignment
+      if (selectedOrder.cliente?._id) {
+        try {
+          const assignedTechnicianInfo = tecnicos.find(t => t._id === assignedTecnico)
+          const technicianName = assignedTechnicianInfo?.nombre || 'Técnico'
+          const formattedDate = new Date(fechaProgramada).toLocaleDateString('es-ES')
+          const formattedTime = horaInicio
+          
+          const notificationData = {
+            title: 'Técnico Asignado',
+            body: `Su orden de trabajo ha sido asignada a ${technicianName}. Fecha de visita: ${formattedDate} a las ${formattedTime}`,
+            usuarioId: selectedOrder.cliente._id
+          }
+
+          console.log('Notification data:', notificationData);
+
+          await api.post('/enviar-notificacion/', notificationData)
+          console.log('Notification sent successfully to client')
+        } catch (notificationError) {
+          console.error('Error sending notification to client:', notificationError)
+          // Don't fail the whole operation if notification fails
+        }
+      }
       
       // Refresh the orders list
       await fetchOrders()
@@ -517,7 +541,7 @@ export default function MobileAppOrdersPage() {
         {selectedOrder && (
           <Box sx={{ px: 3, pb: 1 }}>
             <Typography variant="subtitle2" color="text.secondary">
-              Orden #{selectedOrder.aniomesprogramacion || ''}{selectedOrder.numero || ''} - {selectedOrder.cliente?.nombre || ''}
+              Orden #{(selectedOrder.aniomesprogramacion as string) || ''}{selectedOrder.numero || ''} - {selectedOrder.cliente?.nombre || ''}
             </Typography>
           </Box>
         )}
