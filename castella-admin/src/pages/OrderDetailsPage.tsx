@@ -51,7 +51,11 @@ export default function OrderDetailsPage() {
       // Set scheduled date and time if available
       if (ord?.fechaProgramada) {
         const date = new Date(ord.fechaProgramada)
-        setFechaProgramada(date.toISOString().split('T')[0]) // YYYY-MM-DD format
+        // Convert to dd/mm/yyyy format for display
+        const day = date.getDate().toString().padStart(2, '0')
+        const month = (date.getMonth() + 1).toString().padStart(2, '0')
+        const year = date.getFullYear()
+        setFechaProgramada(`${day}/${month}/${year}`)
         setHoraProgramada(date.toTimeString().split(' ')[0].substring(0, 5)) // HH:MM format
       }
     } catch (error) {
@@ -124,8 +128,9 @@ export default function OrderDetailsPage() {
     }
 
     try {
-      // Combine date and time into ISO string
-      const scheduledDateTime = new Date(`${fechaProgramada}T${horaProgramada}:00`)
+      // Convert dd/mm/yyyy format to ISO string
+      const [day, month, year] = fechaProgramada.split('/')
+      const scheduledDateTime = new Date(`${year}-${month}-${day}T${horaProgramada}:00`)
       
       await api.put(`/orden/${id}`, { 
         fechaProgramada: scheduledDateTime.toISOString() 
@@ -240,19 +245,20 @@ export default function OrderDetailsPage() {
       <Typography variant="h6">Programación de la Orden</Typography>
       <Paper sx={{ p: 2, mb: 2 }}>
         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <TextField
-            label="Fecha Programada"
-            type="date"
-            value={fechaProgramada}
-            onChange={(e) => {
-              setFechaProgramada(e.target.value)
-              if (finalizationError) setFinalizationError('')
-            }}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            sx={{ flex: 2 }}
-          />
+                     <TextField
+             label="Fecha Programada"
+             type="text"
+             placeholder="dd/mm/yyyy"
+             value={fechaProgramada}
+             onChange={(e) => {
+               setFechaProgramada(e.target.value)
+               if (finalizationError) setFinalizationError('')
+             }}
+             InputLabelProps={{
+               shrink: true,
+             }}
+             sx={{ flex: 2 }}
+           />
           <TextField
             label="Hora"
             type="time"

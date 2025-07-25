@@ -193,10 +193,21 @@ export default function MobileAppOrdersPage() {
     setSelectedOrder(order)
     setAssignedTecnico(order.tecnico?._id || '')
     
-    // Set current values or defaults
-    const currentDate = order.fechaProgramada ? 
-      new Date(order.fechaProgramada).toISOString().split('T')[0] : 
-      new Date().toISOString().split('T')[0]
+    // Set current values or defaults in dd/mm/yyyy format
+    let currentDate = ''
+    if (order.fechaProgramada) {
+      const date = new Date(order.fechaProgramada)
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const year = date.getFullYear()
+      currentDate = `${day}/${month}/${year}`
+    } else {
+      const today = new Date()
+      const day = today.getDate().toString().padStart(2, '0')
+      const month = (today.getMonth() + 1).toString().padStart(2, '0')
+      const year = today.getFullYear()
+      currentDate = `${day}/${month}/${year}`
+    }
     setFechaProgramada(currentDate)
     
     setHoraInicio((order.horaInicio as string) || '09:00')
@@ -214,9 +225,13 @@ export default function MobileAppOrdersPage() {
     setAssignError('')
 
     try {
+      // Convert dd/mm/yyyy format to ISO string
+      const [day, month, year] = fechaProgramada.split('/')
+      const scheduledDateTime = new Date(`${year}-${month}-${day}T${horaInicio}:00`)
+      
       const updateData = {
         tecnico: assignedTecnico,
-        fechaProgramada: `${fechaProgramada}T${horaInicio}:00.000Z`,
+        fechaProgramada: scheduledDateTime.toISOString(),
         horaInicio: horaInicio,
         estado: 'ASIGNADA' // Update status to assigned
       }
@@ -228,7 +243,7 @@ export default function MobileAppOrdersPage() {
         try {
           const assignedTechnicianInfo = tecnicos.find(t => t._id === assignedTecnico)
           const technicianName = assignedTechnicianInfo?.nombre || 'Técnico'
-          const formattedDate = new Date(fechaProgramada).toLocaleDateString('es-ES')
+          const formattedDate = fechaProgramada // Already in dd/mm/yyyy format
           const formattedTime = horaInicio
           
           const notificationData = {
@@ -568,7 +583,8 @@ export default function MobileAppOrdersPage() {
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField
                 label="Fecha Programada"
-                type="date"
+                type="text"
+                placeholder="dd/mm/yyyy"
                 value={fechaProgramada}
                 onChange={(e) => setFechaProgramada(e.target.value)}
                 InputLabelProps={{
