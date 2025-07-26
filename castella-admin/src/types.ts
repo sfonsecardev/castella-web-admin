@@ -56,4 +56,47 @@ export interface Cliente {
   correo?: string
   direccion?: string
   [key: string]: unknown
+}
+
+export interface Servicio {
+  _id: string
+  nombre: string
+}
+
+export interface Tarea {
+  _id: string
+  nombre: string
+}
+
+export interface MantenimientoPendiente {
+  _id: string
+  numero: number
+  estado: string
+  cliente: {
+    _id: string
+    nombre: string
+    telefono?: string
+    correo?: string
+  }
+  tecnico?: {
+    _id: string
+    nombre: string
+    correoPrincipal?: string
+  }
+  digitador?: {
+    _id: string
+    nombre: string
+  }
+  servicio?: Servicio
+  tarea?: Tarea
+  cerroOrden?: {
+    _id: string
+    nombre: string
+  }
+  fechaEjecucion: string
+  periodicidadMeses: number
+  aniomesprogramacion?: string
+  factura?: string
+  proximoMantenimiento: string
+  diasHastaMantenimiento: number
 } 
