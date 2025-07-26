@@ -17,31 +17,30 @@ export default function MaintenancePage() {
   const [maintenances, setMaintenances] = useState<MantenimientoPendiente[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(0) // 0-based for MUI DataGrid
+  const [pageSize, setPageSize] = useState(25)
+  const [rowCount, setRowCount] = useState(0)
   const navigate = useNavigate()
 
   const fetchMaintenances = async () => {
     setLoading(true)
     setError(null)
     try {
-      const { data } = await api.get('/mantenimientos-pendientes')
+      // Convert 0-based page to 1-based for API
+      const apiPage = page + 1
+      const { data } = await api.get(`/mantenimientos-pendientes?page=${apiPage}&limit=${pageSize}`)
+      
       console.log('=== MAINTENANCE API RESPONSE ===')
       console.log('Full response data:', JSON.stringify(data, null, 2))
-      console.log('Response type:', typeof data)
-      console.log('Response keys:', Object.keys(data || {}))
+      console.log('Pagination info:', {
+        total: data.total,
+        page: data.page,
+        totalPages: data.totalPages,
+        hasNextPage: data.hasNextPage,
+        hasPreviousPage: data.hasPreviousPage
+      })
       
-      if (data.mantenimientos) {
-        console.log('Found mantenimientos array:', data.mantenimientos.length, 'items')
-        console.log('First maintenance item:', JSON.stringify(data.mantenimientos[0], null, 2))
-      }
-      
-      if (data.data?.mantenimientos) {
-        console.log('Found nested mantenimientos array:', data.data.mantenimientos.length, 'items')
-      }
-      
-      console.log('Total count from API:', data.total)
-      console.log('=== END MAINTENANCE API RESPONSE ===')
-      
-      const items = data.mantenimientos ?? data.data?.mantenimientos ?? []
+      const items = data.mantenimientos ?? []
       console.log('Processing items for DataGrid:', items.length)
       
       // Validate each item has required fields
@@ -55,6 +54,8 @@ export default function MaintenancePage() {
       
       console.log('Valid items after filtering:', validItems.length)
       setMaintenances(validItems)
+      setRowCount(data.total || 0)
+      
     } catch (err: any) {
       console.error('=== MAINTENANCE API ERROR ===')
       console.error('Error object:', err)
@@ -70,7 +71,8 @@ export default function MaintenancePage() {
 
   useEffect(() => {
     fetchMaintenances()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize])
 
   const formatDate = (dateString: string) => {
     try {
@@ -258,12 +260,12 @@ export default function MaintenancePage() {
         </Alert>
       )}
 
-      <Paper sx={{ mb: 2, p: 2 }}>
-        <Typography variant="body2" color="text.secondary">
-          Esta vista muestra todas las órdenes finalizadas que requieren mantenimiento en los próximos 30 días, 
-          basado en su periodicidad configurada.
-        </Typography>
-      </Paper>
+             <Paper sx={{ mb: 2, p: 2 }}>
+         <Typography variant="body2" color="text.secondary">
+           Esta vista muestra todas las órdenes finalizadas que requieren mantenimiento en los próximos 30 días, 
+           basado en su periodicidad configurada. {rowCount > 0 && `Total: ${rowCount} mantenimientos pendientes.`}
+         </Typography>
+       </Paper>
 
       <div style={{ height: 700, width: '100%' }}>
         {(() => {
@@ -274,32 +276,34 @@ export default function MaintenancePage() {
             }
             
             return (
-              <DataGrid
-                rows={maintenances}
-                columns={columns}
-                getRowId={(row) => {
-                  console.log('Getting row ID for:', row?._id)
-                  return row._id
-                }}
-                loading={loading}
-                pageSizeOptions={[10, 25, 50]}
-                initialState={{
-                  pagination: {
-                    paginationModel: { pageSize: 25 }
-                  },
-                  sorting: {
-                    sortModel: [{ field: 'diasHastaMantenimiento', sort: 'asc' }]
-                  }
-                }}
-                sx={{
-                  '& .MuiDataGrid-row:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                  },
-                }}
-                onError={(error) => {
-                  console.error('DataGrid error:', error)
-                }}
-              />
+                             <DataGrid
+                 rows={maintenances}
+                 columns={columns}
+                 getRowId={(row) => row._id}
+                 loading={loading}
+                 
+                 // Server-side pagination
+                 paginationMode="server"
+                 rowCount={rowCount}
+                 paginationModel={{ page, pageSize }}
+                 onPaginationModelChange={(model) => {
+                   setPage(model.page)
+                   setPageSize(model.pageSize)
+                 }}
+                 pageSizeOptions={[10, 25, 50, 100]}
+                 
+                 // Sorting (handled by server)
+                 sortingMode="server"
+                 
+                 sx={{
+                   '& .MuiDataGrid-row:hover': {
+                     backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                   },
+                 }}
+                 onError={(error) => {
+                   console.error('DataGrid error:', error)
+                 }}
+               />
             )
           } catch (e) {
             console.error('Error rendering DataGrid:', e)
