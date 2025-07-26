@@ -4,10 +4,12 @@ import {
   Typography, 
   Chip,
   Alert,
-  Paper
+  Paper,
+  Link
 } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid'
 import type { GridColDef } from '@mui/x-data-grid'
+import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import type { MantenimientoPendiente } from '../types'
 
@@ -15,6 +17,7 @@ export default function MaintenancePage() {
   const [maintenances, setMaintenances] = useState<MantenimientoPendiente[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   const fetchMaintenances = async () => {
     setLoading(true)
@@ -106,7 +109,17 @@ export default function MaintenancePage() {
          try {
            const aniomes = params.row?.aniomesprogramacion || ''
            const numero = params.row?.numero || ''
-           return `#${aniomes}${numero}`
+           const orderNumber = `#${aniomes}${numero}`
+           return (
+             <Link
+               component="button"
+               variant="body2"
+               onClick={() => navigate(`/maintenance/${params.row._id}`)}
+               sx={{ cursor: 'pointer', textDecoration: 'underline' }}
+             >
+               {orderNumber}
+             </Link>
+           )
          } catch (e) {
            console.error('Error rendering numero:', e)
            return '#N/A'
@@ -119,7 +132,6 @@ export default function MaintenancePage() {
        width: 250,
        valueGetter: (value: any, row: any) => {
          try {
-           console.log('Getting cliente for row:', row?.cliente?.nombre)
            return row?.cliente?.nombre ?? 'N/A'
          } catch (e) {
            console.error('Error getting cliente:', e)
@@ -131,44 +143,29 @@ export default function MaintenancePage() {
       field: 'servicio',
       headerName: 'Servicio',
       width: 200,
-      valueGetter: (value: any, row: any) => {
-        try {
-          console.log('Getting servicio for row:', row?.servicio?.nombre)
-          return row?.servicio?.nombre ?? 'N/A'
-        } catch (e) {
-          console.error('Error getting servicio:', e)
-          return 'Error'
-        }
-      },
+             valueGetter: (value: any, row: any) => {
+         try {
+           return row?.servicio?.nombre ?? 'N/A'
+         } catch (e) {
+           console.error('Error getting servicio:', e)
+           return 'Error'
+         }
+       },
     },
     {
       field: 'tarea',
       headerName: 'Tarea',
       width: 200,
-      valueGetter: (value: any, row: any) => {
-        try {
-          console.log('Getting tarea for row:', row?.tarea?.nombre)
-          return row?.tarea?.nombre ?? 'N/A'
-        } catch (e) {
-          console.error('Error getting tarea:', e)
-          return 'Error'
-        }
-      },
+             valueGetter: (value: any, row: any) => {
+         try {
+           return row?.tarea?.nombre ?? 'N/A'
+         } catch (e) {
+           console.error('Error getting tarea:', e)
+           return 'Error'
+         }
+       },
     },
-    {
-      field: 'tecnico',
-      headerName: 'Técnico',
-      width: 150,
-      valueGetter: (value: any, row: any) => {
-        try {
-          console.log('Getting tecnico for row:', row?.tecnico?.nombre)
-          return row?.tecnico?.nombre ?? 'No asignado'
-        } catch (e) {
-          console.error('Error getting tecnico:', e)
-          return 'Error'
-        }
-      },
-    },
+
     {
       field: 'fechaEjecucion',
       headerName: 'Última Ejecución',

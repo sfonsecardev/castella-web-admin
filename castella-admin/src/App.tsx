@@ -8,6 +8,7 @@ import MobileAppOrdersPage from './pages/MobileAppOrdersPage'
 import OrderDetailsPage from './pages/OrderDetailsPage'
 import GuaranteesPage from './pages/GuaranteesPage'
 import MaintenancePage from './pages/MaintenancePage'
+import MaintenanceDetailsPage from './pages/MaintenanceDetailsPage'
 import RatingsPage from './pages/RatingsPage'
 import UsersPage from './pages/UsersPage'
 import ClientsPage from './pages/ClientsPage'
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/mobile-orders" element={<MobileAppOrdersPage />} />
           <Route path="/order/:id" element={<OrderDetailsPage />} />
           <Route path="/maintenance" element={<MaintenancePage />} />
+          <Route path="/maintenance/:id" element={<MaintenanceDetailsPage />} />
           <Route path="/guarantees" element={<GuaranteesPage />} />
           <Route path="/ratings" element={<RatingsPage />} />
           <Route path="/users" element={<UsersPage />} />
