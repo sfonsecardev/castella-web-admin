@@ -111,20 +111,20 @@ export default function MaintenancePage() {
         }
       }
     },
-    {
-      field: 'cliente',
-      headerName: 'Cliente',
-      flex: 1,
-      valueGetter: (value: any, row: any) => {
-        try {
-          console.log('Getting cliente for row:', row?.cliente?.nombre)
-          return row?.cliente?.nombre ?? 'N/A'
-        } catch (e) {
-          console.error('Error getting cliente:', e)
-          return 'Error'
-        }
-      },
-    },
+         {
+       field: 'cliente',
+       headerName: 'Cliente',
+       width: 250,
+       valueGetter: (value: any, row: any) => {
+         try {
+           console.log('Getting cliente for row:', row?.cliente?.nombre)
+           return row?.cliente?.nombre ?? 'N/A'
+         } catch (e) {
+           console.error('Error getting cliente:', e)
+           return 'Error'
+         }
+       },
+     },
     {
       field: 'servicio',
       headerName: 'Servicio',
