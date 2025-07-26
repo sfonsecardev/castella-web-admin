@@ -98,19 +98,21 @@ export default function MaintenancePage() {
   }
 
   const columns: GridColDef[] = [
-    { 
-      field: 'numero', 
-      headerName: 'Orden #', 
-      width: 100,
-      renderCell: (params) => {
-        try {
-          return `#${params.value || 'N/A'}`
-        } catch (e) {
-          console.error('Error rendering numero:', e)
-          return '#N/A'
-        }
-      }
-    },
+         { 
+       field: 'numero', 
+       headerName: 'Orden #', 
+       width: 120,
+       renderCell: (params) => {
+         try {
+           const aniomes = params.row?.aniomesprogramacion || ''
+           const numero = params.row?.numero || ''
+           return `#${aniomes}${numero}`
+         } catch (e) {
+           console.error('Error rendering numero:', e)
+           return '#N/A'
+         }
+       }
+     },
          {
        field: 'cliente',
        headerName: 'Cliente',
