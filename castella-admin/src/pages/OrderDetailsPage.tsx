@@ -161,6 +161,20 @@ export default function OrderDetailsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
+  // Add useEffect to populate fields when order is loaded
+  useEffect(() => {
+    if (order) {
+      // Populate factura field if it exists in the order
+      if (order.factura) {
+        setFactura(order.factura)
+      }
+      // Populate periodicidad field if it exists in the order
+      if ((order as any).periodicidadMeses) {
+        setPeriodicidad((order as any).periodicidadMeses.toString())
+      }
+    }
+  }, [order])
+
   const handleAssignTecnico = async (tecnicoId: string) => {
     if (!id) return
     try {
@@ -472,7 +486,7 @@ export default function OrderDetailsPage() {
         <Button
           variant="contained"
           onClick={handleUpdateSchedule}
-          disabled={!fechaProgramada || !horaProgramada}
+          disabled={!fechaProgramada || !horaProgramada || order.estado === 'FINALIZADO'}
           sx={{ mt: 1 }}
         >
           Actualizar Programación
@@ -498,6 +512,9 @@ export default function OrderDetailsPage() {
             required
             error={finalizationError.includes('factura')}
             helperText="Campo obligatorio"
+            InputProps={{
+              readOnly: order.estado === 'FINALIZADO',
+            }}
           />
           <TextField
             label="Periodicidad Meses"
@@ -506,6 +523,9 @@ export default function OrderDetailsPage() {
             size="small"
             type="number"
             helperText="Campo opcional"
+            InputProps={{
+              readOnly: order.estado === 'FINALIZADO',
+            }}
           />
           <Button
             variant="contained"
