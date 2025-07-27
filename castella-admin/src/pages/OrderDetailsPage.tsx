@@ -50,7 +50,8 @@ export default function OrderDetailsPage() {
         const notificationData = {
           title,
           body,
-          usuarioId: order.cliente._id
+          usuarioId: order.cliente._id,
+          orderId: order._id
         }
 
         console.log('Sending notification to client:', notificationData)

@@ -249,7 +249,8 @@ export default function MobileAppOrdersPage() {
           const notificationData = {
             title: 'Técnico Asignado',
             body: `Su orden de trabajo ha sido asignada a ${technicianName}. Fecha de visita: ${formattedDate} a las ${formattedTime}`,
-            usuarioId: selectedOrder.cliente._id
+            usuarioId: selectedOrder.cliente._id,
+            orderId: selectedOrder._id
           }
 
           console.log('Notification data:', notificationData);
