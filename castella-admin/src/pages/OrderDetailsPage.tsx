@@ -495,20 +495,21 @@ export default function OrderDetailsPage() {
       <Paper sx={{ p: 2, mb: 2 }}>
         <div>Estado: {order.estado}</div>
 
-        <FormControl size="small" sx={{ mt: 1, minWidth: 160 }}>
-          <InputLabel>Asignar Técnico</InputLabel>
-          <Select
-            value={order.tecnico?._id ?? ''}
-            label="Asignar Técnico"
-            onChange={(e) => handleAssignTecnico(e.target.value)}
-          >
-            {(Array.isArray(tecnicos) ? tecnicos : []).map((t) => (
-              <MenuItem key={t._id} value={t._id}>
-                {t.nombre}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+               <FormControl size="small" sx={{ mt: 1, minWidth: 160 }}>
+         <InputLabel>Asignar Técnico</InputLabel>
+         <Select
+           value={order.tecnico?._id ?? ''}
+           label="Asignar Técnico"
+           onChange={(e) => handleAssignTecnico(e.target.value)}
+           disabled={order.estado === 'FINALIZADO'}
+         >
+           {(Array.isArray(tecnicos) ? tecnicos : []).map((t) => (
+             <MenuItem key={t._id} value={t._id}>
+               {t.nombre}
+             </MenuItem>
+           ))}
+         </Select>
+       </FormControl>
       </Paper>
 
       <Typography variant="h6">Programación de la Orden</Typography>
