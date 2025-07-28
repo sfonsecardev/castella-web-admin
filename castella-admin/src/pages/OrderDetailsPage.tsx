@@ -12,6 +12,7 @@ import {
   Paper,
   Alert,
   Snackbar,
+  Rating,
 } from '@mui/material'
 import { useParams, Link } from 'react-router-dom'
 import api from '../api/axios'
@@ -48,6 +49,11 @@ export default function OrderDetailsPage() {
   // Add state for referenced order (guarantee of)
   const [referencedOrder, setReferencedOrder] = useState<OrdenDeTrabajo | null>(null)
   const [referencedOrderLoading, setReferencedOrderLoading] = useState(false)
+
+  // Add state for order rating
+  const [orderRating, setOrderRating] = useState<any>(null)
+  const [ratingLoading, setRatingLoading] = useState(false)
+  const [ratingError, setRatingError] = useState('')
 
   const authUser = useAuthStore((s) => s.user)
 
@@ -105,6 +111,26 @@ export default function OrderDetailsPage() {
       setReferencedOrder(null)
     } finally {
       setReferencedOrderLoading(false)
+    }
+  }
+
+  // Function to fetch the order rating
+  const fetchOrderRating = async () => {
+    if (!id) return
+    setRatingLoading(true)
+    setRatingError('')
+    try {
+      const { data } = await api.get(`/orden/${id}/calificacion`)
+      setOrderRating(data.calificacion)
+    } catch (error: any) {
+      console.error('Error fetching order rating:', error)
+      if (error.response?.status === 404) {
+        setOrderRating(null) // No rating found
+      } else {
+        setRatingError('Error al cargar la calificación')
+      }
+    } finally {
+      setRatingLoading(false)
     }
   }
 
@@ -166,6 +192,7 @@ export default function OrderDetailsPage() {
   useEffect(() => {
     fetchOrder()
     fetchTecnicos()
+    fetchOrderRating()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
@@ -449,6 +476,8 @@ export default function OrderDetailsPage() {
           </Paper>
         </>
       )}
+
+
       
       {/* Error Alert for general errors */}
       {finalizationError && !finalizationError.includes('factura') && (
@@ -485,7 +514,7 @@ export default function OrderDetailsPage() {
       <Typography variant="h6">Programación de la Orden</Typography>
       <Paper sx={{ p: 2, mb: 2 }}>
         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                     <TextField
+          <TextField
              label="Fecha Programada"
              type="text"
              placeholder="dd/mm/yyyy"
@@ -530,7 +559,7 @@ export default function OrderDetailsPage() {
             {finalizationError}
           </Alert>
         )}
-                 <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
            <TextField
              label="Número de Factura"
              value={factura}
@@ -547,7 +576,7 @@ export default function OrderDetailsPage() {
              }}
              sx={{ minWidth: 200 }}
            />
-                       <TextField
+           <TextField
               label="Fecha de Ejecución"
               type="text"
               placeholder="dd/mm/yyyy"
@@ -586,6 +615,66 @@ export default function OrderDetailsPage() {
              Finalizar
            </Button>
          </Box>
+      </Paper>
+
+      {/* Order Rating Section */}
+      <Typography variant="h6" gutterBottom>
+        Calificación del Servicio
+      </Typography>
+      <Paper sx={{ p: 2, mb: 2 }}>
+        {ratingLoading ? (
+          <Typography>Cargando calificación...</Typography>
+        ) : ratingError ? (
+          <Alert severity="error">{ratingError}</Alert>
+        ) : orderRating ? (
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Typography variant="body1" sx={{ mr: 2 }}>
+                <strong>Calificación:</strong>
+              </Typography>
+              <Rating
+                value={orderRating.estrellas || 0}
+                readOnly
+                precision={0.5}
+                sx={{ mr: 2 }}
+              />
+              <Typography variant="body1">
+                {orderRating.estrellas}/5 estrellas
+              </Typography>
+            </Box>
+            
+            {orderRating.comentario && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  <strong>Comentario:</strong>
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {orderRating.comentario}
+                </Typography>
+              </Box>
+            )}
+            
+            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Cliente:</strong> {orderRating.cliente?.nombre}
+              </Typography>
+              {orderRating.tecnico && (
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Técnico:</strong> {orderRating.tecnico.nombre}
+                </Typography>
+              )}
+              {orderRating.fecha && (
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Fecha:</strong> {new Date(orderRating.fecha).toLocaleDateString('es-ES')}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+        ) : (
+          <Typography color="text.secondary">
+            Esta orden aún no ha sido calificada por el cliente.
+          </Typography>
+        )}
       </Paper>
     </Box>
   )
