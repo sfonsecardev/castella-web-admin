@@ -11,8 +11,24 @@ export default function RatingsPage() {
 
   useEffect(() => {
     api.get('/usuarios-rol/TECNICO').then((res) => {
-      const data = Array.isArray(res.data) ? res.data : res.data.data ?? []
+      console.log('API Response for technicians:', res)
+      console.log('Response data:', res.data)
+      
+      // Handle different response structures:
+      // 1. Direct array: res.data = [...]
+      // 2. Nested in data: res.data = {data: [...]}
+      // 3. Nested in usuarios: res.data = {usuarios: [...]}
+      const data = Array.isArray(res.data) 
+        ? res.data 
+        : res.data.usuarios ?? res.data.data ?? []
+      
+      console.log('Processed data:', data)
+      console.log('Data length:', data.length)
+      
       setTecnicos(data)
+    }).catch((error) => {
+      console.error('Error fetching technicians:', error)
+      console.error('Error response:', error.response)
     })
   }, [])
 

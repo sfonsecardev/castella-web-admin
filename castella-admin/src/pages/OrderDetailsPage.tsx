@@ -27,6 +27,14 @@ export default function OrderDetailsPage() {
 
   const [factura, setFactura] = useState('')
   const [periodicidad, setPeriodicidad] = useState('')
+  const [fechaEjecucion, setFechaEjecucion] = useState(() => {
+    // Set default to today's date in dd/mm/yyyy format
+    const today = new Date()
+    const day = today.getDate().toString().padStart(2, '0')
+    const month = (today.getMonth() + 1).toString().padStart(2, '0')
+    const year = today.getFullYear()
+    return `${day}/${month}/${year}`
+  })
   const [finalizationError, setFinalizationError] = useState('')
   
   // Success messages state
@@ -172,6 +180,15 @@ export default function OrderDetailsPage() {
       if ((order as any).periodicidadMeses) {
         setPeriodicidad((order as any).periodicidadMeses.toString())
       }
+      // Populate fechaEjecucion field if it exists in the order
+      if ((order as any).fechaEjecucion) {
+        const date = new Date((order as any).fechaEjecucion)
+        // Convert to dd/mm/yyyy format for display
+        const day = date.getDate().toString().padStart(2, '0')
+        const month = (date.getMonth() + 1).toString().padStart(2, '0')
+        const year = date.getFullYear()
+        setFechaEjecucion(`${day}/${month}/${year}`)
+      }
     }
   }, [order])
 
@@ -300,6 +317,12 @@ export default function OrderDetailsPage() {
       return
     }
     
+    // Validate that fechaEjecucion is required
+    if (!fechaEjecucion.trim()) {
+      setFinalizationError('La fecha de ejecución es obligatoria para finalizar la orden')
+      return
+    }
+    
     setFinalizationError('')
     
     try {
@@ -312,6 +335,12 @@ export default function OrderDetailsPage() {
       if (periodicidad.trim()) {
         payload.periodicidadMeses = Number(periodicidad)
       }
+      
+      // Include fechaEjecucion (now mandatory)
+      // Convert dd/mm/yyyy format to ISO string
+      const [day, month, year] = fechaEjecucion.split('/')
+      const executionDate = new Date(`${year}-${month}-${day}`)
+      payload.fechaEjecucion = executionDate.toISOString()
       
       await api.put(`/orden/${id}`, payload)
       await fetchOrder()
@@ -339,6 +368,7 @@ export default function OrderDetailsPage() {
       // Clear the form fields after successful finalization
       setFactura('')
       setPeriodicidad('')
+      setFechaEjecucion('')
     } catch (error) {
       console.error('Error finalizing order:', error)
       setFinalizationError('Error al finalizar la orden. Por favor, inténtelo de nuevo.')
@@ -500,41 +530,62 @@ export default function OrderDetailsPage() {
             {finalizationError}
           </Alert>
         )}
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <TextField
-            label="Número de Factura"
-            value={factura}
-            onChange={(e) => {
-              setFactura(e.target.value)
-              if (finalizationError) setFinalizationError('')
-            }}
-            size="small"
-            required
-            error={finalizationError.includes('factura')}
-            helperText="Campo obligatorio"
-            InputProps={{
-              readOnly: order.estado === 'FINALIZADO',
-            }}
-          />
-          <TextField
-            label="Periodicidad Meses"
-            value={periodicidad}
-            onChange={(e) => setPeriodicidad(e.target.value)}
-            size="small"
-            type="number"
-            helperText="Campo opcional"
-            InputProps={{
-              readOnly: order.estado === 'FINALIZADO',
-            }}
-          />
-          <Button
-            variant="contained"
-            disabled={order.estado === 'FINALIZADO'}
-            onClick={handleFinalize}
-          >
-            Finalizar
-          </Button>
-        </Box>
+                 <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+           <TextField
+             label="Número de Factura"
+             value={factura}
+             onChange={(e) => {
+               setFactura(e.target.value)
+               if (finalizationError) setFinalizationError('')
+             }}
+             size="small"
+             required
+             error={finalizationError.includes('factura')}
+             helperText="Campo obligatorio"
+             InputProps={{
+               readOnly: order.estado === 'FINALIZADO',
+             }}
+             sx={{ minWidth: 200 }}
+           />
+                       <TextField
+              label="Fecha de Ejecución"
+              type="text"
+              placeholder="dd/mm/yyyy"
+              value={fechaEjecucion}
+              onChange={(e) => {
+                setFechaEjecucion(e.target.value)
+                if (finalizationError) setFinalizationError('')
+              }}
+              size="small"
+              required
+              error={finalizationError.includes('fecha de ejecución')}
+              helperText="Campo obligatorio"
+              InputProps={{
+                readOnly: order.estado === 'FINALIZADO',
+              }}
+              sx={{ minWidth: 200 }}
+            />
+           <TextField
+             label="Periodicidad Meses"
+             value={periodicidad}
+             onChange={(e) => setPeriodicidad(e.target.value)}
+             size="small"
+             type="number"
+             helperText="Campo opcional"
+             InputProps={{
+               readOnly: order.estado === 'FINALIZADO',
+             }}
+             sx={{ minWidth: 150 }}
+           />
+           <Button
+             variant="contained"
+             disabled={order.estado === 'FINALIZADO'}
+             onClick={handleFinalize}
+             sx={{ minHeight: 40 }}
+           >
+             Finalizar
+           </Button>
+         </Box>
       </Paper>
     </Box>
   )
