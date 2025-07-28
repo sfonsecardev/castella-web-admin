@@ -491,31 +491,31 @@ export default function OrderDetailsPage() {
         <div>Nombre: {order.cliente?.nombre}</div>
       </Paper>
 
-      <Typography variant="h6">Detalles de la Orden</Typography>
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <div>Estado: {order.estado}</div>
+             <Typography variant="h6">Detalles de la Orden</Typography>
+       <Paper sx={{ p: 2, mb: 2 }}>
+         <div>Estado: {order.estado}</div>
 
-               <FormControl size="small" sx={{ mt: 1, minWidth: 160 }}>
-         <InputLabel>Asignar Técnico</InputLabel>
-         <Select
-           value={order.tecnico?._id ?? ''}
-           label="Asignar Técnico"
-           onChange={(e) => handleAssignTecnico(e.target.value)}
-           disabled={order.estado === 'FINALIZADO'}
-         >
-           {(Array.isArray(tecnicos) ? tecnicos : []).map((t) => (
-             <MenuItem key={t._id} value={t._id}>
-               {t.nombre}
-             </MenuItem>
-           ))}
-         </Select>
-       </FormControl>
-      </Paper>
+         <FormControl size="small" sx={{ mt: 1, minWidth: 160 }}>
+           <InputLabel>Asignar Técnico</InputLabel>
+           <Select
+             value={order.tecnico?._id ?? ''}
+             label="Asignar Técnico"
+             onChange={(e) => handleAssignTecnico(e.target.value)}
+             disabled={order.estado === 'FINALIZADO'}
+           >
+             {(Array.isArray(tecnicos) ? tecnicos : []).map((t) => (
+               <MenuItem key={t._id} value={t._id}>
+                 {t.nombre}
+               </MenuItem>
+             ))}
+           </Select>
+         </FormControl>
 
-      <Typography variant="h6">Programación de la Orden</Typography>
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <TextField
+         <Typography variant="subtitle1" sx={{ mt: 3, mb: 2, fontWeight: 'bold' }}>
+           Programación
+         </Typography>
+         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+           <TextField
              label="Fecha Programada"
              type="text"
              placeholder="dd/mm/yyyy"
@@ -529,29 +529,29 @@ export default function OrderDetailsPage() {
              }}
              sx={{ flex: 2 }}
            />
-          <TextField
-            label="Hora"
-            type="time"
-            value={horaProgramada}
-            onChange={(e) => {
-              setHoraProgramada(e.target.value)
-              if (finalizationError) setFinalizationError('')
-            }}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            sx={{ flex: 1 }}
-          />
-        </Box>
-        <Button
-          variant="contained"
-          onClick={handleUpdateSchedule}
-          disabled={!fechaProgramada || !horaProgramada || order.estado === 'FINALIZADO'}
-          sx={{ mt: 1 }}
-        >
-          Actualizar Programación
-        </Button>
-      </Paper>
+           <TextField
+             label="Hora"
+             type="time"
+             value={horaProgramada}
+             onChange={(e) => {
+               setHoraProgramada(e.target.value)
+               if (finalizationError) setFinalizationError('')
+             }}
+             InputLabelProps={{
+               shrink: true,
+             }}
+             sx={{ flex: 1 }}
+           />
+         </Box>
+         <Button
+           variant="contained"
+           onClick={handleUpdateSchedule}
+           disabled={!fechaProgramada || !horaProgramada || order.estado === 'FINALIZADO'}
+           sx={{ mt: 1 }}
+         >
+           Actualizar Programación
+         </Button>
+       </Paper>
 
       <Typography variant="h6">Finalizar Orden</Typography>
       <Paper sx={{ p: 2 }}>
